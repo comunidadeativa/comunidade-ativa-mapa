@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comunidade Ativa | Mapa do Território</title>
+
+<link rel="stylesheet"
+ href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+ crossorigin=""/>
+
+<style>
+:root{
+  --verde:#315f3b;
+  --verde2:#567b4c;
+  --claro:#e7eee2;
+  --areia:#f5f0e7;
+  --terra:#b85c38;
+  --texto:#263329;
+  --cinza:#68736b;
+  --branco:#fff;
+  --sombra:0 10px 30px rgba(38,51,41,.13);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--texto);background:var(--areia)}
+header{background:var(--verde);color:white;padding:38px 20px}
+.header{max-width:1200px;margin:auto}
+.eyebrow{text-transform:uppercase;letter-spacing:2px;font-size:12px;opacity:.8}
+h1{font-size:clamp(32px,5vw,54px);margin:8px 0;line-height:1}
+header p{max-width:720px;line-height:1.55;margin:0;opacity:.92}
+.layout{max-width:1200px;margin:24px auto 45px;padding:0 16px;display:grid;grid-template-columns:1.65fr .85fr;gap:20px}
+.card{background:white;border-radius:18px;overflow:hidden;box-shadow:var(--sombra)}
+#map{height:650px;width:100%}
+.panel{padding:22px}
+.panel h2{margin:0 0 6px;font-size:25px}
+.intro{color:var(--cinza);line-height:1.5;margin-top:0}
+input,select{width:100%;padding:12px;border:1px solid #d7ddd6;border-radius:10px;background:white;font-size:15px;margin:5px 0 14px}
+label{font-size:12px;font-weight:bold;display:block;margin-top:8px}
+.location{width:100%;border:1px solid #e1e6e0;background:#fafbf9;border-radius:12px;padding:13px;text-align:left;cursor:pointer;margin-bottom:8px}
+.location:hover{background:var(--claro);border-color:var(--verde)}
+.location strong{display:block}
+.location span{font-size:12px;color:var(--cinza)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0}
+.stat{background:var(--claro);border-radius:12px;padding:12px}.stat b{display:block;font-size:22px;color:var(--verde)}
+.notice{padding:12px;border-radius:10px;background:#f1f4ef;color:#4d5a50;font-size:13px;line-height:1.45;margin-top:12px}
+.popup{min-width:260px;max-width:350px}
+.popup h3{color:var(--verde);margin:4px 0}
+.popup h4{margin:9px 0 3px}
+.popup img{width:100%;max-height:190px;object-fit:cover;border-radius:9px;margin:8px 0}
+.popup p{line-height:1.45}
+.tag{display:inline-block;background:var(--claro);color:var(--verde);border-radius:20px;padding:4px 8px;font-size:11px;font-weight:bold}
+.video{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;margin-top:10px}
+.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+footer{text-align:center;color:var(--cinza);font-size:12px;padding:0 20px 30px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}#map{height:500px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header">
+    <div class="eyebrow">Comunidade Ativa</div>
+    <h1>Mapa do território</h1>
+    <p>Conheça comunidades, iniciativas, encontros e experiências que fazem parte do território do Comunidade Ativa.</p>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="card"><div id="map"></div></section>
+
+  <aside class="card">
+    <div class="panel">
+      <h2>Territórios</h2>
+      <p class="intro">Clique em um município no mapa ou na lista para conhecer as ações cadastradas.</p>
+
+      <div class="stats">
+        <div class="stat"><b id="totalLocalidades">0</b> localidades</div>
+        <div class="stat"><b id="totalAcoes">0</b> ações</div>
+      </div>
+
+      <label for="search">Buscar</label>
+      <input id="search" type="search" placeholder="Digite o nome do município...">
+
+      <div id="locationList"></div>
+
+      <div class="notice">
+        <strong>Atualização:</strong> o conteúdo deste mapa vem de uma planilha.
+        Para cadastrar novas ações, basta preencher o formulário indicado nas instruções.
+      </div>
+    </div>
+  </aside>
+</main>
+
+<footer>Comunidade Ativa · Norte de Minas</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+ crossorigin=""></script>
+
+<script>
+/*
+===========================================================
+CONFIGURAÇÃO
+===========================================================
+
+Depois de criar a planilha do Google, publique-a na web
+e cole aqui o endereço CSV gerado pelo Google.
+
+Exemplo:
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/XXXXXXXX/pub?output=csv";
+
+ATENÇÃO:
+Se deixar vazio, o mapa usa os dados de demonstração abaixo.
+===========================================================
+*/
+
+const CSV_URL = "COLE_AQUI_O_LINK_CSV_DA_SUA_PLANILHA";
+
+
+/*
+===========================================================
+DADOS DE DEMONSTRAÇÃO
+===========================================================
+*/
+
+const DEMO = [
+  {
+    municipio:"Miravânia", lat:-15.6746, lng:-44.4127,
+    acao:"Ação de exemplo", categoria:"Cultura", data:"2026",
+    texto:"Substitua este conteúdo pelos dados reais do Comunidade Ativa.",
+    foto:"", video:""
+  },
+  {
+    municipio:"Januária", lat:-15.4878, lng:-44.3631,
+    acao:"Projeto Mir'Ação", categoria:"Formação", data:"2026",
+    texto:"Espaço para apresentar a história da ação, participantes e resultados.",
+    foto:"", video:""
+  },
+  {
+    municipio:"Montes Claros", lat:-16.7282, lng:-43.8578,
+    acao:"Comunidade Ativa", categoria:"Articulação", data:"2026",
+    texto:"Espaço para registrar as articulações e iniciativas do território.",
+    foto:"", video:""
+  },
+  {
+    municipio:"São João do Pacuí", lat:-16.5374, lng:-44.5157,
+    acao:"Ação de exemplo", categoria:"Economia solidária", data:"2026",
+    texto:"Descrição da ação.",
+    foto:"", video:""
+  },
+  {
+    municipio:"Coração de Jesus", lat:-16.6855, lng:-44.3658,
+    acao:"Ação de exemplo", categoria:"Cultura", data:"2026",
+    texto:"Descrição da ação.",
+    foto:"", video:""
+  },
+  {
+    municipio:"São João da Lagoa", lat:-16.8476, lng:-44.3512,
+    acao:"Ação de exemplo", categoria:"Esporte", data:"2026",
+    texto:"Descrição da ação.",
+    foto:"", video:""
+  },
+  {
+    municipio:"Porteirinha", lat:-15.7434, lng:-43.0281,
+    acao:"Ação de exemplo", categoria:"Formação", data:"2026",
+    texto:"Descrição da ação.",
+    foto:"", video:""
+  }
+];
+
+
+/*
+===========================================================
+MAPA
+===========================================================
+*/
+
+const map = L.map("map");
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+  attribution:"&copy; OpenStreetMap contributors"
+}).addTo(map);
+
+let markers = [];
+let dados = [];
+
+
+/*
+Converte o ID/link do YouTube para embed.
+*/
+function youtubeEmbed(url){
+  if(!url) return "";
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=|youtube\.com\/shorts\/)([^?&/]+)/);
+  const id = match ? match[1] : url.trim();
+  return id ? `https://www.youtube.com/embed/${id}` : "";
+}
+
+
+/*
+Converte texto CSV do Google Sheets.
+*/
+function parseCSV(text){
+  const rows=[];
+  let row=[], cell="", quoted=false;
+
+  for(let i=0;i<text.length;i++){
+    const c=text[i], n=text[i+1];
+
+    if(c === '"' && quoted && n === '"'){
+      cell+='"'; i++; continue;
+    }
+    if(c === '"'){quoted=!quoted; continue}
+
+    if(c === ',' && !quoted){
+      row.push(cell); cell=""; continue;
+    }
+
+    if((c === '\n' || c === '\r') && !quoted){
+      if(c === '\r' && n === '\n') i++;
+      row.push(cell); cell="";
+      if(row.some(x=>x.trim()!=="")) rows.push(row);
+      row=[];
+      continue;
+    }
+
+    cell+=c;
+  }
+
+  if(cell!=="" || row.length){
+    row.push(cell);
+    if(row.some(x=>x.trim()!=="")) rows.push(row);
+  }
+
+  if(!rows.length) return [];
+
+  const headers=rows[0].map(h=>h.trim().toLowerCase());
+
+  return rows.slice(1).map(r=>{
+    const o={};
+    headers.forEach((h,i)=>o[h]=(r[i]||"").trim());
+    return o;
+  });
+}
+
+
+/*
+Aceita nomes de colunas em português.
+*/
+function normalizar(linha){
+  return {
+    municipio: linha.municipio || linha["município"] || linha.localidade || "",
+    lat: parseFloat(linha.lat || linha.latitude),
+    lng: parseFloat(linha.lng || linha.longitude),
+    acao: linha.acao || linha["ação"] || linha.titulo || linha["título"] || "Ação",
+    categoria: linha.categoria || "",
+    data: linha.data || "",
+    texto: linha.texto || linha.descricao || linha["descrição"] || "",
+    foto: linha.foto || linha.imagem || "",
+    video: linha.video || ""
+  };
+}
+
+
+/*
+Cria popup.
+*/
+function popupLocalidade(nome, acoes){
+
+  let html=`<div class="popup">
+    <h3>${nome}</h3>
+    <p>${acoes.length} ação(ões) cadastrada(s).</p>`;
+
+  acoes.forEach(a=>{
+    html+=`
+      <hr>
+      ${a.categoria ? `<span class="tag">${a.categoria}</span>` : ""}
+      <h4>${a.acao}</h4>
+      ${a.data ? `<small>${a.data}</small>` : ""}
+      ${a.foto ? `<img src="${a.foto}" alt="${a.acao}">` : ""}
+      ${a.texto ? `<p>${a.texto}</p>` : ""}
+    `;
+
+    const embed=youtubeEmbed(a.video);
+    if(embed){
+      html+=`<div class="video">
+        <iframe src="${embed}" title="${a.acao}" allowfullscreen></iframe>
+      </div>`;
+    }
+  });
+
+  html+="</div>";
+  return html;
+}
+
+
+/*
+Renderiza mapa/lista.
+*/
+function renderizar(registros){
+
+  markers.forEach(m=>map.removeLayer(m));
+  markers=[];
+
+  const grupos={};
+
+  registros.forEach(a=>{
+    if(!a.municipio) return;
+    if(!grupos[a.municipio]) grupos[a.municipio]=[];
+    grupos[a.municipio].push(a);
+  });
+
+  const locais=Object.entries(grupos)
+    .map(([nome,acoes])=>{
+      const primeiro=acoes.find(a=>Number.isFinite(a.lat)&&Number.isFinite(a.lng));
+      return primeiro ? {nome,lat:primeiro.lat,lng:primeiro.lng,acoes} : null;
+    })
+    .filter(Boolean);
+
+  document.getElementById("totalLocalidades").textContent=locais.length;
+  document.getElementById("totalAcoes").textContent=registros.length;
+
+  const list=document.getElementById("locationList");
+  list.innerHTML="";
+
+  locais.forEach(local=>{
+    const marker=L.marker([local.lat,local.lng]).addTo(map);
+    marker.bindPopup(popupLocalidade(local.nome,local.acoes));
+    markers.push(marker);
+
+    const btn=document.createElement("button");
+    btn.className="location";
+    btn.dataset.nome=local.nome.toLowerCase();
+    btn.innerHTML=`<strong>${local.nome}</strong><span>${local.acoes.length} ação(ões)</span>`;
+
+    btn.onclick=()=>{
+      map.setView([local.lat,local.lng],11,{animate:true});
+      marker.openPopup();
+    };
+
+    list.appendChild(btn);
+  });
+
+  if(locais.length){
+    map.fitBounds(L.latLngBounds(locais.map(l=>[l.lat,l.lng])),{padding:[40,40]});
+  }
+}
+
+
+/*
+Carrega a planilha.
+*/
+async function carregar(){
+
+  if(!CSV_URL || CSV_URL.startsWith("COLE_AQUI")){
+    dados=DEMO;
+    renderizar(dados);
+    return;
+  }
+
+  try{
+    const resposta=await fetch(CSV_URL);
+    if(!resposta.ok) throw new Error("Não foi possível acessar a planilha.");
+
+    const csv=await resposta.text();
+    const linhas=parseCSV(csv);
+    const reais=linhas.map(normalizar).filter(x=>x.municipio);
+
+    dados=reais.length ? reais : DEMO;
+    renderizar(dados);
+
+  }catch(erro){
+    console.error(erro);
+    dados=DEMO;
+    renderizar(dados);
+
+    const aviso=document.querySelector(".notice");
+    aviso.innerHTML="<strong>Atenção:</strong> não foi possível carregar a planilha. O mapa está mostrando os dados de demonstração.";
+  }
+}
+
+document.getElementById("search").addEventListener("input",function(){
+  const termo=this.value.toLowerCase().trim();
+
+  document.querySelectorAll(".location").forEach(btn=>{
+    btn.style.display=btn.dataset.nome.includes(termo) ? "block" : "none";
+  });
+});
+
+carregar();
+</script>
+
+</body>
+</html>
