@@ -3,158 +3,389 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mapa dos Sertões | Comunidade Ativa</title>
+<title>Mapa dos Sertões — Comunidade Ativa</title>
+
 <link rel="preconnect" href="https://unpkg.com">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
 <style>
-:root{--yellow:#ffdf5a;--orange:#ffbf58;--orange2:#f5ad38;--ink:#26231d;--green:#315b2c;--cream:#fffdf7;--white:#fff;--blue:#2387c9}
+:root{
+  --yellow:#f5c400;
+  --orange:#e87519;
+  --orange-dark:#c85b0d;
+  --blue:#1778b5;
+  --ink:#24313a;
+  --cream:#fffaf0;
+  --white:#ffffff;
+  --shadow:0 16px 45px rgba(40,35,20,.18);
+}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
-body{background:#8e9f93 url('./imagens/fundo-sertao.jpg') center top/cover fixed no-repeat}
-body:before{content:"";position:fixed;inset:0;background:rgba(25,25,15,.08);pointer-events:none;z-index:-1}
-.header{background:var(--yellow);min-height:210px;padding:24px 7.4% 20px;display:flex;align-items:center;position:relative;z-index:3;box-shadow:0 2px 0 rgba(0,0,0,.04)}
-.header-inner{width:100%;max-width:1160px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:30px}
-.copy{min-width:0}
-.kicker{font-size:12px;letter-spacing:1.45px;font-weight:700;margin-bottom:2px;text-transform:uppercase}
-.title{display:block;width:min(560px,58vw);height:auto;max-height:92px;object-fit:contain;object-position:left center;margin:0 0 3px -2px}
-.description{font-size:16px;line-height:1.35;max-width:650px;margin:0;font-weight:400}
-.logos{display:flex;align-items:center;gap:16px;flex:none}
-.logo{height:80px;width:auto;object-fit:contain;display:block}
-.logo.ca{height:86px}.logo.caritas{height:80px}.logo.itaipu{height:80px}
-.stage{max-width:1160px;margin:20px auto 34px;padding:0 12px;display:grid;grid-template-columns:minmax(0,1fr) 345px;gap:18px;position:relative;z-index:2}
-.map-card,.side{border-radius:20px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.17)}
-.map-card{background:#fff;min-height:710px}
-#map{width:100%;height:710px}
-.side{background:linear-gradient(150deg,#ffc25d 0%,#ffb84c 100%);padding:22px 20px 18px;display:flex;flex-direction:column;min-height:710px}
-.side h2{font-size:25px;margin:0 0 6px;font-weight:700}
-.intro{font-size:15px;line-height:1.35;margin:0 0 13px;color:#735a34}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.stat{background:rgba(247,251,236,.88);border-radius:14px;padding:12px 13px;min-height:73px}
-.stat b{display:block;font-size:24px;color:var(--green);line-height:1;margin-bottom:5px}
-.stat span{font-size:14px;color:#3c4434}
-.search-wrap{margin-bottom:11px;position:relative}
-.search{width:100%;height:42px;border:0;border-radius:11px;padding:0 14px 0 38px;background:rgba(255,255,255,.93);font:400 14px Arial,Helvetica;color:#333;outline:none;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.search:focus{box-shadow:0 0 0 3px rgba(49,91,44,.18)}
-.search-icon{position:absolute;left:13px;top:11px;font-size:18px;color:#8a8a82}
-.category{width:100%;height:38px;border:0;border-radius:10px;padding:0 11px;background:rgba(255,255,255,.72);font:400 13px Arial,Helvetica;color:#4d4537;margin-bottom:10px;outline:none}
-.location-list{display:flex;flex-direction:column;gap:6px;overflow:auto;flex:1;padding-right:2px;min-height:0}
-.location-list::-webkit-scrollbar{width:6px}.location-list::-webkit-scrollbar-thumb{background:rgba(91,72,38,.25);border-radius:8px}
-.location{appearance:none;width:100%;border:0;background:rgba(255,255,255,.94);border-radius:9px;padding:11px 13px;text-align:left;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;transition:.18s transform,.18s background}
-.location:hover{background:#fff;transform:translateX(2px)}
-.location strong{font-size:15px;line-height:1.1}.location small{display:block;font-size:12px;margin-top:4px;color:#777}.arrow{font-size:20px;color:#6f6b60}
-.notice{margin-top:12px;font-size:12px;line-height:1.25;color:#5b503d;display:flex;gap:7px;align-items:flex-start}
-.notice .i{font-size:16px;line-height:1}
-.popup{min-width:255px;max-width:315px;font-family:Arial,Helvetica,sans-serif}.popup h3{margin:0 0 4px;font-size:19px;color:#315b2c}.popup-sub{font-size:12px;color:#777;margin-bottom:8px}.popup-item{border-top:1px solid #e9e4da;padding-top:10px;margin-top:10px}.popup-item:first-of-type{border-top:0;padding-top:0;margin-top:0}.tag{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;padding:3px 8px;border-radius:20px;background:#fce5b6;color:#8b581b}.popup h4{margin:7px 0 3px;font-size:15px}.popup small{display:block;color:#777;margin-bottom:5px}.popup img{width:100%;max-height:160px;object-fit:cover;border-radius:9px;margin:6px 0}.popup p{font-size:13px;line-height:1.4;margin:5px 0}.video{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:9px;margin-top:7px}.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.leaflet-control-zoom a{font-weight:700}.leaflet-popup-content-wrapper{border-radius:13px}.leaflet-popup-content{margin:12px 14px}
-footer{text-align:center;padding:0 15px 25px;color:rgba(255,255,255,.86);font-size:12px;text-shadow:0 1px 2px rgba(0,0,0,.45)}
-@media(max-width:900px){.header{min-height:auto;padding:22px 20px}.header-inner{align-items:flex-start;flex-direction:column}.title{width:min(560px,92vw);max-height:90px}.description{font-size:15px}.logos{width:100%;justify-content:flex-start;gap:12px}.logo{height:62px!important}.stage{grid-template-columns:1fr;margin-top:14px;padding:0 10px}.map-card{min-height:480px}#map{height:480px}.side{min-height:560px}.location-list{max-height:390px}}
-@media(max-width:520px){.kicker{font-size:10px;letter-spacing:1px}.description{font-size:14px}.logos{gap:8px}.logo{height:52px!important}.stage{padding:0 8px}.side{padding:18px 14px}.map-card{border-radius:15px}.side{border-radius:15px}}
+body{background:#caa86a}
+.site-bg{
+  position:fixed;inset:0;z-index:-3;
+  background-image:linear-gradient(rgba(250,230,175,.16),rgba(250,230,175,.16)),url("imagens/fundo-sertao.jpg");
+  background-size:cover;background-position:center;background-repeat:no-repeat;
+}
+.site-bg:after{
+  content:"";position:absolute;inset:0;
+  background:rgba(255,248,225,.10);
+}
+.header{
+  background:var(--yellow);
+  padding:22px 5vw 24px;
+  box-shadow:0 5px 18px rgba(0,0,0,.14);
+}
+.header-inner{max-width:1400px;margin:auto;display:grid;grid-template-columns:1fr auto;gap:30px;align-items:center}
+.kicker{font-size:12px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;margin-bottom:7px}
+.title-logo{width:min(520px,72vw);height:auto;display:block;max-height:115px;object-fit:contain;object-position:left center}
+.subtitle{max-width:730px;margin:7px 0 0;font-size:16px;line-height:1.45;font-weight:600}
+.partner-logos{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap}
+.partner-logos img{width:auto;height:58px;object-fit:contain;background:rgba(255,255,255,.25);border-radius:12px;padding:6px}
+.partner-logos img:last-child{height:64px}
+
+.main{max-width:1400px;margin:28px auto;padding:0 5vw 45px}
+.layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(310px,.65fr);gap:22px;align-items:stretch}
+.card{background:rgba(255,255,255,.96);border-radius:24px;box-shadow:var(--shadow);overflow:hidden}
+.map-card{min-height:650px;display:flex;flex-direction:column}
+.map-top{padding:20px 22px 14px;display:flex;justify-content:space-between;gap:16px;align-items:flex-end}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.13em;font-weight:900;color:var(--orange)}
+.map-title{font-size:27px;font-weight:900;margin:3px 0 0}
+.controls{display:flex;gap:9px;flex-wrap:wrap}
+input,select{border:1px solid #ddd6c9;background:#fff;border-radius:12px;padding:11px 12px;font:inherit;outline:none}
+input:focus,select:focus{border-color:var(--orange)}
+#map{height:560px;width:100%;background:#dcecf3}
+.map-note{padding:10px 20px;font-size:12px;color:#6d6d6d;background:#fff}
+
+.territories{background:var(--orange);color:#fff;border-radius:24px;box-shadow:var(--shadow);padding:23px;display:flex;flex-direction:column;min-height:650px}
+.territories h2{font-size:29px;margin:0 0 5px}
+.territories .intro{margin:0 0 17px;font-size:14px;line-height:1.4;opacity:.94}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.stat{background:rgba(255,255,255,.16);border-radius:15px;padding:12px}
+.stat strong{display:block;font-size:25px;line-height:1}
+.stat span{font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.territory-list{overflow:auto;padding-right:3px;display:flex;flex-direction:column;gap:9px}
+.territory{
+  width:100%;text-align:left;border:0;border-radius:15px;padding:13px 14px;
+  background:#fff;color:var(--ink);cursor:pointer;transition:.15s;
+}
+.territory:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,0,0,.15)}
+.territory .name{font-weight:900;font-size:16px}
+.territory .meta{font-size:12px;color:#737373;margin-top:4px}
+.empty{background:rgba(255,255,255,.15);padding:15px;border-radius:15px;font-size:14px}
+
+.popup{font-family:Arial,Helvetica,sans-serif;min-width:220px}
+.popup h3{margin:0 0 6px;font-size:17px}
+.popup .cat{display:inline-block;background:#f5c400;padding:3px 7px;border-radius:7px;font-size:11px;font-weight:800;margin-bottom:8px}
+.popup p{margin:6px 0;line-height:1.4}
+.popup img{width:100%;max-height:180px;object-fit:cover;border-radius:9px;margin-top:8px}
+.popup a{color:#1778b5;font-weight:700}
+.leaflet-popup-content-wrapper{border-radius:14px}
+.marker-dot{width:22px;height:22px;border-radius:50% 50% 50% 0;background:#1678b5;border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.3);transform:rotate(-45deg)}
+.marker-dot span{display:block;width:6px;height:6px;background:#fff;border-radius:50%;margin:5px auto}
+.footer{text-align:center;color:#fff;background:rgba(40,35,20,.5);padding:18px;font-size:12px}
+
+@media(max-width:900px){
+ .header-inner{grid-template-columns:1fr}
+ .partner-logos{justify-content:flex-start}
+ .layout{grid-template-columns:1fr}
+ .map-card,.territories{min-height:0}
+ #map{height:500px}
+}
+@media(max-width:560px){
+ .header{padding:18px 18px 20px}
+ .main{padding:0 14px 30px;margin-top:16px}
+ .map-top{align-items:flex-start;flex-direction:column}
+ .title-logo{width:min(470px,92vw)}
+ #map{height:440px}
+ .partner-logos img{height:48px}
+}
 </style>
 </head>
+
 <body>
+<div class="site-bg"></div>
+
 <header class="header">
   <div class="header-inner">
-    <div class="copy">
-      <div class="kicker">PROJETO COMUNIDADE ATIVA • CÁRITAS BRASIL • ITAIPU BINACIONAL</div>
-      <img class="title" src="./imagens/logo-mapa-dos-sertoes.png" alt="Mapa dos Sertões">
-      <p class="description">Conheça comunidades, iniciativas, encontros e experiências que fazem parte do território do Comunidade Ativa.</p>
+    <div>
+      <div class="kicker">Projeto Comunidade Ativa • Cáritas Brasil • Itaipu Binacional</div>
+      <img class="title-logo" src="imagens/logo-mapa-dos-sertoes-cortada.png" alt="Mapa dos Sertões">
+      <p class="subtitle">Conheça comunidades, iniciativas, encontros e experiências que fazem parte do território do Comunidade Ativa.</p>
     </div>
-    <div class="logos" aria-label="Instituições parceiras">
-      <img class="logo ca" src="./imagens/logo-comunidade-ativa.png" alt="Comunidade Ativa">
-      <img class="logo caritas" src="./imagens/logo-caritas.png" alt="Cáritas Brasil">
-      <img class="logo itaipu" src="./imagens/logo-parceiro.png" alt="Itaipu Binacional">
+    <div class="partner-logos" aria-label="Logos dos parceiros">
+      <img src="imagens/logo-comunidade-ativa.png" alt="Comunidade Ativa">
+      <img src="imagens/logo-caritas.png" alt="Cáritas">
+      <img src="imagens/logo-parceiro.png" alt="Parceiro">
     </div>
   </div>
 </header>
 
-<main class="stage">
-  <section class="map-card"><div id="map"></div></section>
-  <aside class="side">
-    <h2>Territórios</h2>
-    <p class="intro">Clique em um município no mapa ou na lista para conhecer as ações cadastradas.</p>
-    <div class="stats">
-      <div class="stat"><b id="totalLocalidades">0</b><span>localidades</span></div>
-      <div class="stat"><b id="totalAcoes">0</b><span>ações</span></div>
-    </div>
-    <div class="search-wrap"><span class="search-icon">⌕</span><input id="search" class="search" type="search" placeholder="Buscar município..."></div>
-    <select id="categoryFilter" class="category" aria-label="Filtrar por categoria">
-      <option value="">Todas as categorias</option>
-      <option>Cultura</option><option>Formação</option><option>Articulação</option><option>Economia solidária</option><option>Esporte</option>
-    </select>
-    <div id="locationList" class="location-list"></div>
-    <div class="notice"><span class="i">ⓘ</span><span>Dados atualizados automaticamente via planilha do Google.</span></div>
-  </aside>
-</main>
-<footer>Comunidade Ativa · Mapa dos Sertões · Norte de Minas Gerais</footer>
+<main class="main">
+  <div class="layout">
+    <section class="card map-card">
+      <div class="map-top">
+        <div>
+          <div class="eyebrow">Território em movimento</div>
+          <div class="map-title">Mapa das iniciativas</div>
+        </div>
+        <div class="controls">
+          <input id="search" type="search" placeholder="Buscar município ou ação">
+          <select id="category"><option value="">Todas as categorias</option></select>
+        </div>
+      </div>
+      <div id="map"></div>
+      <div class="map-note">Os dados são atualizados a partir da planilha do projeto. Novos registros entram automaticamente após a publicação da planilha.</div>
+    </section>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <aside class="territories">
+      <h2>Territórios</h2>
+      <p class="intro">Clique em um município para localizar suas iniciativas no mapa.</p>
+      <div class="stats">
+        <div class="stat"><strong id="localityCount">0</strong><span>localidades</span></div>
+        <div class="stat"><strong id="actionCount">0</strong><span>ações</span></div>
+      </div>
+      <div id="territoryList" class="territory-list">
+        <div class="empty">Carregando dados...</div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<footer class="footer">Comunidade Ativa • Mapa dos Sertões</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQCVixeQkymtR5fGABvJO-DHxDk2U36Cls3N79lF9EV5yigx4MmOtWmUkXws5yN44RhkcjqGj8gtesO/pub?gid=950681250&single=true&output=csv";
-const DEMO=[
- {municipio:"Miravânia",lat:-15.6746,lng:-44.4127,acao:"Encontro de Raizeiras e Tradicionalistas",categoria:"Cultura",data:"2026",texto:"Valorização dos saberes medicinais populares e fortalecimento das parteiras e raizeiras do cerrado.",foto:"",video:""},
- {municipio:"Januária",lat:-15.4878,lng:-44.3631,acao:"Projeto Mir'Ação - Margens do Velho Chico",categoria:"Formação",data:"2026",texto:"Formação audiovisual para jovens ribeirinhos registrando memórias e patrimônio do Rio São Francisco.",foto:"",video:""},
- {municipio:"Montes Claros",lat:-16.7282,lng:-43.8578,acao:"Rede de Articulação Comunidade Ativa",categoria:"Articulação",data:"2026",texto:"Ponto focal de articulação territorial entre gestores comunitários, juventudes e agricultores familiares.",foto:"",video:""},
- {municipio:"São João do Pacuí",lat:-16.5374,lng:-44.5157,acao:"Feira de Troca de Sementes Crioulas",categoria:"Economia solidária",data:"2026",texto:"Iniciativa comunitária para preservação de sementes nativas e incentivo à agroecologia local.",foto:"",video:""},
- {municipio:"Coração de Jesus",lat:-16.6855,lng:-44.3658,acao:"Roda de Folia de Reis e Tradições",categoria:"Cultura",data:"2026",texto:"Salvaguarda das folias e festejo tradicional com participação das escolas da zona rural.",foto:"",video:""},
- {municipio:"São João da Lagoa",lat:-16.8476,lng:-44.3512,acao:"Torneio Intercomunitário Veredas",categoria:"Esporte",data:"2026",texto:"Integração do futebol comunitário feminino e masculino entre associações rurais.",foto:"",video:""},
- {municipio:"Porteirinha",lat:-15.7434,lng:-43.0281,acao:"Oficina de Manejo do Pequi e Frutos do Cerrado",categoria:"Formação",data:"2026",texto:"Capacitação sobre beneficiamento do pequi, barú e baru para geração de renda familiar.",foto:"",video:""}
-];
-const map=L.map('map',{zoomControl:true,scrollWheelZoom:true});
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}).addTo(map);
-function criarIcone(){return L.divIcon({className:'custom-pin',html:`<div style="width:32px;height:42px;position:relative"><svg width="32" height="42" viewBox="0 0 32 42" xmlns="http://www.w3.org/2000/svg"><path d="M16 0C7.16 0 0 7.16 0 16c0 11 16 26 16 26s16-15 16-26C32 7.16 24.84 0 16 0z" fill="#2387c9"/><circle cx="16" cy="16" r="8" fill="#fff"/><circle cx="16" cy="16" r="4" fill="#2387c9"/></svg></div>`,iconSize:[32,42],iconAnchor:[16,42],popupAnchor:[0,-37]})}
-const icon=criarIcone(); let markers=[]; let dados=[];
-function youtubeEmbed(url){if(!url)return '';const m=url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=|youtube\.com\/shorts\/)([^?&/]+)/);const id=m?m[1]:url.trim();return id?`https://www.youtube.com/embed/${id}`:''}
-function esc(s){return String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
-function catClass(c){const x=(c||'').toLowerCase();if(x.includes('cultura'))return 'Cultura';if(x.includes('forma'))return 'Formação';if(x.includes('articula'))return 'Articulação';if(x.includes('econ'))return 'Economia solidária';if(x.includes('esporte'))return 'Esporte';return ''}
-function parseCSV(text){
-  text=String(text||'').replace(/^\uFEFF/,'');
-  const firstLine=(text.split(/\r?\n/).find(x=>x.trim())||'');
-  const delimiter=(firstLine.split(';').length>firstLine.split(',').length)?';':',';
-  const rows=[];let row=[],cell='',quoted=false;
-  for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];
-    if(c==='"'&&quoted&&n==='"'){cell+='"';i++;continue}
+
+const map = L.map('map', {zoomControl:true}).setView([-16.1,-44.2], 7);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  maxZoom:19,
+  attribution:'&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+const markerIcon = L.divIcon({
+  className:'',
+  html:'<div class="marker-dot"><span></span></div>',
+  iconSize:[22,22],
+  iconAnchor:[11,22],
+  popupAnchor:[0,-20]
+});
+
+let allRows = [];
+let markers = [];
+let markerLayer = L.layerGroup().addTo(map);
+
+function normKey(k){
+  return String(k||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]/g,'');
+}
+function csvParse(text){
+  const rows=[]; let row=[], cell='', quoted=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i], n=text[i+1];
+    if(c==='"' && quoted && n==='"'){cell+='"';i++;continue}
     if(c==='"'){quoted=!quoted;continue}
-    if(c===delimiter&&!quoted){row.push(cell);cell='';continue}
-    if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&n==='\n')i++;row.push(cell);cell='';if(row.some(x=>x.trim()))rows.push(row);row=[];continue}
+    if(c===',' && !quoted){row.push(cell);cell='';continue}
+    if((c==='\\n'||c==='\\r') && !quoted){
+      if(c==='\\r' && n==='\\n') i++;
+      row.push(cell);cell='';
+      if(row.some(v=>v.trim()!=='')) rows.push(row);
+      row=[];continue;
+    }
     cell+=c;
   }
-  if(cell!==''||row.length){row.push(cell);if(row.some(x=>x.trim()))rows.push(row)}
-  if(!rows.length)return [];
-  const h=rows[0].map(x=>x.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
-  return rows.slice(1).map(r=>{const o={};h.forEach((k,i)=>o[k]=(r[i]||'').trim());return o});
+  if(cell!==''||row.length){row.push(cell);if(row.some(v=>v.trim()!==''))rows.push(row)}
+  return rows;
 }
-function norm(x){
- const pick=(...keys)=>{for(const k of keys){const v=x[k];if(v!==undefined&&String(v).trim()!=='')return String(v).trim()}return ''};
- return {
-  municipio:pick('municipio','localidade'),
-  lat:parseFloat(pick('lat','latitude').replace(',','.')),
-  lng:parseFloat(pick('lng','longitude','long').replace(',','.')),
-  acao:pick('acao','titulo','acao_nome')||'Ação',
-  categoria:pick('categoria'),
-  data:pick('data'),
-  texto:pick('texto','descricao'),
-  foto:pick('foto','imagem'),
-  video:pick('video')
- };
+function parseCSV(text){
+  // Google Sheets pode publicar CSV usando vírgula ou ponto-e-vírgula,
+  // e em planilhas pt-BR números podem aparecer com vírgula decimal.
+  const firstLine = String(text).split(/\r?\n/).find(l => l.trim() !== '') || '';
+  const delimiter = (firstLine.split(';').length > firstLine.split(',').length) ? ';' : ',';
+
+  const raw = parseDelimited(text, delimiter);
+  if(!raw.length) return [];
+
+  let headers = raw[0].map(v => String(v||'').trim());
+  const normalizedHeaders = headers.map(normKey);
+
+  // Se o CSV vier com latitude/longitude como "-14,7472" e "-44,4086"
+  // sem aspas, cada número vira dois campos. Reagrupamos esses campos.
+  const looksLikeMap = normalizedHeaders.includes('municipio') &&
+                       normalizedHeaders.includes('lat') &&
+                       normalizedHeaders.includes('lng');
+
+  return raw.slice(1).map(r=>{
+    let values = r.slice();
+
+    if(looksLikeMap && delimiter === ',' && values.length > headers.length){
+      // Estrutura esperada:
+      // municipio | lat | lng | acao | categoria | data | texto | foto | video
+      // Caso lat/lng estejam com vírgula decimal:
+      // municipio | -14 | 7472 | -44 | 4086 | acao | ...
+      if(values.length >= 11 && isNumericPart(values[1]) && isNumericPart(values[2])
+         && isNumericPart(values[3]) && isNumericPart(values[4])){
+        values = [
+          values[0],
+          values[1] + ',' + values[2],
+          values[3] + ',' + values[4],
+          ...values.slice(5)
+        ];
+      }
+    }
+
+    const o={};
+    headers.forEach((h,i)=>o[normKey(h)]=(values[i]??'').trim());
+    return o;
+  });
 }
-function popup(nome,acoes){let h=`<div class="popup"><h3>${esc(nome)}</h3><div class="popup-sub">${acoes.length} ${acoes.length===1?'ação mapeada':'ações mapeadas'}</div>`;acoes.forEach(a=>{const emb=youtubeEmbed(a.video);h+=`<div class="popup-item">${a.categoria?`<span class="tag">${esc(a.categoria)}</span>`:''}<h4>${esc(a.acao)}</h4>${a.data?`<small>${esc(a.data)}</small>`:''}${a.foto?`<img src="${esc(a.foto)}" alt="${esc(a.acao)}">`:''}${a.texto?`<p>${esc(a.texto)}</p>`:''}${emb?`<div class="video"><iframe src="${emb}" title="${esc(a.acao)}" allowfullscreen></iframe></div>`:''}</div>`});return h+'</div>'}
-function render(registros){markers.forEach(m=>map.removeLayer(m));markers=[];const grupos={};registros.forEach(a=>{if(!a.municipio)return;(grupos[a.municipio]??=[]).push(a)});const locais=Object.entries(grupos).map(([nome,acoes])=>{const p=acoes.find(a=>Number.isFinite(a.lat)&&Number.isFinite(a.lng));return p?{nome,lat:p.lat,lng:p.lng,acoes}:null}).filter(Boolean);document.getElementById('totalLocalidades').textContent=locais.length;document.getElementById('totalAcoes').textContent=registros.length;const list=document.getElementById('locationList');list.innerHTML='';locais.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(local=>{const marker=L.marker([local.lat,local.lng],{icon}).addTo(map);marker.bindPopup(popup(local.nome,local.acoes));markers.push(marker);const b=document.createElement('button');b.className='location';b.dataset.nome=local.nome.toLowerCase();b.dataset.categorias=local.acoes.map(a=>(a.categoria||'').toLowerCase()).join(' ');b.innerHTML=`<span><strong>${esc(local.nome)}</strong><small>${local.acoes.length} ${local.acoes.length===1?'ação':'ações'}</small></span><span class="arrow">›</span>`;b.onclick=()=>{map.setView([local.lat,local.lng],12,{animate:true});marker.openPopup()};list.appendChild(b)});if(locais.length)map.fitBounds(L.latLngBounds(locais.map(l=>[l.lat,l.lng])),{padding:[40,40]});else map.setView([-16.4,-44],8)}
-function aplicarFiltros(){const termo=document.getElementById('search').value.toLowerCase().trim();const cat=document.getElementById('categoryFilter').value.toLowerCase().trim();document.querySelectorAll('.location').forEach(b=>{const okNome=!termo||b.dataset.nome.includes(termo);const okCat=!cat||b.dataset.categorias.includes(cat);b.style.display=okNome&&okCat?'flex':'none'})}
-async function carregar(){
-  try{
-    const r=await fetch(CSV_URL,{cache:'no-store'});
-    if(!r.ok)throw Error('Não foi possível acessar a planilha publicada.');
-    const csv=await r.text();
-    const reais=parseCSV(csv).map(norm).filter(x=>x.municipio && Number.isFinite(x.lat) && Number.isFinite(x.lng));
-    dados=reais.length?reais:DEMO;
-    render(dados);
-  }catch(e){
-    console.warn('Planilha indisponível neste momento. Exibindo os 7 territórios de referência.',e);
-    dados=DEMO;
-    render(dados);
+
+function isNumericPart(v){
+  return /^-?\d+(?:[.,]\d+)?$/.test(String(v||'').trim());
+}
+
+function parseDelimited(text, delimiter){
+  const rows=[]; let row=[], cell='', quoted=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i], n=text[i+1];
+    if(c==='"' && quoted && n==='"'){cell+='"';i++;continue}
+    if(c==='"'){quoted=!quoted;continue}
+    if(c===delimiter && !quoted){row.push(cell);cell='';continue}
+    if((c==='\\n'||c==='\\r') && !quoted){
+      if(c==='\\r' && n==='\\n') i++;
+      row.push(cell);cell='';
+      if(row.some(v=>v.trim()!=='')) rows.push(row);
+      row=[];continue;
+    }
+    cell+=c;
   }
+  if(cell!==''||row.length){row.push(cell);if(row.some(v=>v.trim()!==''))rows.push(row)}
+  return rows;
 }
-document.getElementById('search').addEventListener('input',aplicarFiltros);document.getElementById('categoryFilter').addEventListener('change',aplicarFiltros);carregar();
+function get(r,names){
+  for(const n of names){
+    const k=normKey(n);
+    if(r[k]!==undefined && r[k]!=='' ) return r[k];
+  }
+  return '';
+}
+function toNum(v){
+  if(v===null||v===undefined||v==='') return NaN;
+  let s=String(v).trim().replace(/\\s/g,'');
+  if(s.includes(',') && s.includes('.')) s=s.replace(/\\./g,'').replace(',','.');
+  else if(s.includes(',')) s=s.replace(',','.');
+  return Number(s);
+}
+function safeUrl(v){
+  if(!v) return '';
+  if(/^https?:\\/\\//i.test(v)) return v;
+  return '';
+}
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function normalizeRows(rows){
+  return rows.map(r=>{
+    const municipality=get(r,['municipio','município']);
+    const lat=toNum(get(r,['lat','latitude']));
+    const lng=toNum(get(r,['lng','longitude','long']));
+    return {
+      municipio: municipality,
+      lat,lng,
+      acao:get(r,['acao','ação','nome da ação']),
+      categoria:get(r,['categoria','category']),
+      data:get(r,['data']),
+      texto:get(r,['texto','descricao','descrição']),
+      foto:safeUrl(get(r,['foto','imagem','image'])),
+      video:safeUrl(get(r,['video','youtube']))
+    };
+  }).filter(r=>r.municipio && Number.isFinite(r.lat) && Number.isFinite(r.lng));
+}
+
+function popupHtml(r){
+  let h='<div class="popup"><h3>'+escapeHtml(r.acao||'Iniciativa')+'</h3>';
+  if(r.categoria) h+='<div class="cat">'+escapeHtml(r.categoria)+'</div>';
+  h+='<p><b>'+escapeHtml(r.municipio)+'</b></p>';
+  if(r.data) h+='<p>'+escapeHtml(r.data)+'</p>';
+  if(r.texto) h+='<p>'+escapeHtml(r.texto)+'</p>';
+  if(r.foto) h+='<img src="'+r.foto+'" alt="">';
+  if(r.video) h+='<p><a href="'+r.video+'" target="_blank" rel="noopener">Ver vídeo</a></p>';
+  return h+'</div>';
+}
+
+function render(){
+  markerLayer.clearLayers();
+  markers=[];
+  const term=document.getElementById('search').value.toLowerCase().trim();
+  const cat=document.getElementById('category').value;
+  const filtered=allRows.filter(r=>{
+    const hay=(r.municipio+' '+r.acao+' '+r.texto).toLowerCase();
+    return (!term||hay.includes(term)) && (!cat||r.categoria===cat);
+  });
+
+  const groups={};
+  filtered.forEach(r=>(groups[r.municipio]??=[]).push(r));
+  document.getElementById('localityCount').textContent=Object.keys(groups).length;
+  document.getElementById('actionCount').textContent=filtered.length;
+
+  const list=document.getElementById('territoryList');
+  list.innerHTML='';
+  if(!Object.keys(groups).length){
+    list.innerHTML='<div class="empty">Nenhuma iniciativa encontrada.</div>';
+  }
+
+  const bounds=[];
+  Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([municipio,rows])=>{
+    const first=rows[0];
+    const marker=L.marker([first.lat,first.lng],{icon:markerIcon}).addTo(markerLayer);
+    let popup=rows.map(popupHtml).join('<hr>');
+    marker.bindPopup(popup);
+    markers.push(marker);
+    bounds.push([first.lat,first.lng]);
+
+    const btn=document.createElement('button');
+    btn.className='territory';
+    btn.innerHTML='<div class="name">'+escapeHtml(municipio)+'</div><div class="meta">'+rows.length+' '+(rows.length===1?'ação':'ações')+'</div>';
+    btn.onclick=()=>{
+      map.setView([first.lat,first.lng],12,{animate:true});
+      marker.openPopup();
+    };
+    list.appendChild(btn);
+  });
+
+  if(bounds.length===1) map.setView(bounds[0],10);
+  else if(bounds.length>1) map.fitBounds(bounds,{padding:[40,40],maxZoom:9});
+}
+
+function load(){
+  fetch(CSV_URL,{cache:'no-store'})
+    .then(r=>{if(!r.ok)throw new Error('CSV indisponível');return r.text()})
+    .then(t=>{
+      const parsed=parseCSV(t);
+      allRows=normalizeRows(parsed);
+      console.log('MAPA: linhas recebidas do Google Sheets:', parsed.length);
+      console.log('MAPA: registros válidos:', allRows.length, allRows);
+      setup();
+      render();
+      if(allRows.length===0){
+        document.getElementById('territoryList').innerHTML =
+          '<div class="empty">A planilha foi encontrada, mas nenhum registro com município e coordenadas válidas foi reconhecido.</div>';
+      }
+    })
+    .catch(err=>{
+      console.error(err);
+      document.getElementById('territoryList').innerHTML='<div class="empty">Não foi possível carregar a planilha agora.</div>';
+    });
+}
+function setup(){
+  const cats=[...new Set(allRows.map(r=>r.categoria).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const select=document.getElementById('category');
+  select.innerHTML='<option value="">Todas as categorias</option>'+cats.map(c=>'<option>'+escapeHtml(c)+'</option>').join('');
+  document.getElementById('search').oninput=render;
+  select.onchange=render;
+}
+load();
 </script>
 </body>
 </html>
