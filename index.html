@@ -428,7 +428,7 @@ function render(){
 function handleGoogleSheetResponse(data){
   try{
     if(!data || !data.table) throw new Error('Resposta do Google Sheets sem tabela.');
-    const cols=(data.table.cols||[]).map((c,i)=>c.label||['municipio','lat','lng','acao','categoria','data','texto','foto','video'][i]||'');
+    const cols=(data.table.cols||[]).map((c,i)=>normKey(c.label||['municipio','lat','lng','acao','categoria','data','texto','foto','video'][i]||''));
     const rows=(data.table.rows||[]).map(r=>{
       const o={};
       cols.forEach((c,i)=>{
@@ -438,14 +438,19 @@ function handleGoogleSheetResponse(data){
           if(cell.f!==undefined&&cell.f!==null&&cell.f!=='') value=String(cell.f);
           else if(cell.v!==undefined&&cell.v!==null) value=String(cell.v);
         }
-        o[normKey(c)]=value;
+        o[c]=value;
       });
       return o;
     });
-    finishData(rows,'Google Sheets (GViz)');
+    if(rows.length){
+      finishData(rows,'Google Sheets (GViz)');
+    }else{
+      console.warn('GViz respondeu sem registros; tentando CSV publicado.');
+      loadCsv();
+    }
   }catch(err){
     console.error('Erro Google Sheets GViz:',err);
-    showDataError('A planilha respondeu, mas não foi possível interpretar os dados.');
+    loadCsv().catch(()=>showDataError('Não foi possível carregar os dados publicados da planilha.'));
   }
 }
 
@@ -490,12 +495,12 @@ let refreshBusy=false;
 function refreshData(){
   if(refreshBusy) return;
   refreshBusy=true;
-  loadGviz()
+  loadCsv()
     .catch(err=>{
-      console.warn('GViz falhou na atualização:',err.message);
-      return loadCsv();
+      console.warn('CSV falhou na atualização:',err.message);
+      return loadGviz();
     })
-    .catch(err=>console.warn('CSV falhou na atualização:',err.message))
+    .catch(err=>console.warn('GViz falhou na atualização:',err.message))
     .finally(()=>{ refreshBusy=false; });
 }
 
@@ -529,13 +534,13 @@ function loadGviz(){
 
 function load(){
   document.getElementById('territoryList').innerHTML='<div class="empty">Carregando dados da planilha...</div>';
-  // Primeiro tenta GViz, que consulta diretamente a planilha.
-  // O CSV fica apenas como plano B.
-  loadGviz().catch(err=>{
-    console.warn('GViz não carregou:',err);
-    return loadCsv();
+  // Tenta primeiro o CSV publicado, que é a mesma fonte pública usada pelo projeto.
+  // Se ele falhar ou estiver vazio, usa o GViz como alternativa.
+  loadCsv().catch(err=>{
+    console.warn('CSV não carregou:',err);
+    return loadGviz();
   }).catch(err=>{
-    console.error('GViz e CSV falharam:',err);
+    console.error('CSV e GViz falharam:',err);
     showDataError('Não foi possível carregar a planilha. Verifique se a aba MAPA está publicada na Web.');
   });
 }
