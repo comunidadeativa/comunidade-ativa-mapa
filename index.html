@@ -287,10 +287,25 @@ function escapeHtml(s){
 }
 
 function normalizeRows(rows){
+  // Se latitude/longitude estiverem vazias, forem 0,0 ou estiverem
+  // claramente fora da região do Norte de Minas, usamos automaticamente
+  // as coordenadas oficiais do município. Assim o Forms não precisa
+  // pedir coordenadas para cada nova ação.
   return rows.map(r=>{
     const municipality=get(r,['municipio','município']);
-    const lat=toNum(get(r,['lat','latitude']));
-    const lng=toNum(get(r,['lng','longitude','long']));
+    let lat=toNum(get(r,['lat','latitude']));
+    let lng=toNum(get(r,['lng','longitude','long']));
+
+    const official=OFFICIAL_TERRITORIES.find(t=>normKey(t.name)===normKey(municipality));
+    const coordinatesInvalid=!Number.isFinite(lat)||!Number.isFinite(lng)||
+      (Math.abs(lat)<0.001 && Math.abs(lng)<0.001)||
+      Math.abs(lat)>25 || Math.abs(lng)>55;
+
+    if(coordinatesInvalid && official){
+      lat=official.lat;
+      lng=official.lng;
+    }
+
     return {
       municipio: municipality,
       lat,lng,
