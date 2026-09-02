@@ -454,13 +454,23 @@ function showDataError(message){
 }
 
 function loadCsv(){
-  return fetch(CSV_URL,{cache:'no-store'})
+  // Acrescenta um carimbo de tempo para impedir que navegador/CDN
+  // reaproveite uma versão antiga do CSV publicado pelo Google.
+  const freshUrl = CSV_URL + (CSV_URL.includes('?') ? '&' : '?') + '_=' + Date.now();
+  return fetch(freshUrl,{cache:'no-store'})
     .then(r=>{if(!r.ok) throw new Error('HTTP '+r.status); return r.text();})
     .then(text=>{
       const rows=parseCSV(text);
       if(!rows.length) throw new Error('CSV vazio.');
-      finishData(rows,'Google Sheets CSV');
+      finishData(rows,'Google Sheets CSV atualizado');
     });
+}
+
+// Atualiza os dados automaticamente enquanto a página estiver aberta.
+function startAutoRefresh(){
+  setInterval(()=>{
+    loadCsv().catch(err=>console.warn('Atualização automática:',err.message));
+  },30000);
 }
 
 function loadGviz(){
@@ -503,6 +513,7 @@ if(typeof L === 'undefined'){
     '<div class="empty">A biblioteca do mapa não carregou. Atualize a página ou verifique a conexão.</div>';
 }else{
   load();
+  startAutoRefresh();
 }
 </script>
 </body>
