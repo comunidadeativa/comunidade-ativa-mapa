@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mapa dos Sertões — Comunidade Ativa</title>
 
-<link rel="preconnect" href="https://unpkg.com">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 
 <style>
 :root{
@@ -23,7 +23,7 @@
 html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
 body{background:#caa86a}
 .site-bg{
-  position:fixed;inset:0;z-index:-3;
+  position:fixed;inset:0;z-index:0;pointer-events:none;
   background-image:linear-gradient(rgba(250,230,175,.16),rgba(250,230,175,.16)),url("imagens/fundo-sertao.jpg");
   background-size:cover;background-position:center;background-repeat:no-repeat;
 }
@@ -32,6 +32,7 @@ body{background:#caa86a}
   background:rgba(255,248,225,.10);
 }
 .header{
+  position:relative;z-index:1;
   background:var(--yellow);
   padding:22px 5vw 24px;
   box-shadow:0 5px 18px rgba(0,0,0,.14);
@@ -44,17 +45,17 @@ body{background:#caa86a}
 .partner-logos img{width:auto;height:58px;object-fit:contain;background:rgba(255,255,255,.25);border-radius:12px;padding:6px}
 .partner-logos img:last-child{height:64px}
 
-.main{max-width:1400px;margin:28px auto;padding:0 5vw 45px}
+.main{position:relative;z-index:1;max-width:1400px;margin:28px auto;padding:0 5vw 45px}
 .layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(310px,.65fr);gap:22px;align-items:stretch}
 .card{background:rgba(255,255,255,.96);border-radius:24px;box-shadow:var(--shadow);overflow:hidden}
-.map-card{min-height:650px;display:flex;flex-direction:column}
+.map-card{min-height:0;display:flex;flex-direction:column}
 .map-top{padding:20px 22px 14px;display:flex;justify-content:space-between;gap:16px;align-items:flex-end}
 .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.13em;font-weight:900;color:var(--orange)}
 .map-title{font-size:27px;font-weight:900;margin:3px 0 0}
 .controls{display:flex;gap:9px;flex-wrap:wrap}
 input,select{border:1px solid #ddd6c9;background:#fff;border-radius:12px;padding:11px 12px;font:inherit;outline:none}
 input:focus,select:focus{border-color:var(--orange)}
-#map{height:560px;width:100%;background:#dcecf3}
+#map{height:640px;width:100%;background:#dcecf3}
 .map-note{padding:10px 20px;font-size:12px;color:#6d6d6d;background:#fff}
 
 .territories{background:var(--orange);color:#fff;border-radius:24px;box-shadow:var(--shadow);padding:23px;display:flex;flex-direction:column;min-height:650px}
@@ -83,7 +84,7 @@ input:focus,select:focus{border-color:var(--orange)}
 .leaflet-popup-content-wrapper{border-radius:14px}
 .marker-dot{width:22px;height:22px;border-radius:50% 50% 50% 0;background:#1678b5;border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.3);transform:rotate(-45deg)}
 .marker-dot span{display:block;width:6px;height:6px;background:#fff;border-radius:50%;margin:5px auto}
-.footer{text-align:center;color:#fff;background:rgba(40,35,20,.5);padding:18px;font-size:12px}
+.footer{position:relative;z-index:1;text-align:center;color:#fff;background:rgba(40,35,20,.5);padding:18px;font-size:12px}
 
 @media(max-width:900px){
  .header-inner{grid-template-columns:1fr}
@@ -154,7 +155,7 @@ input:focus,select:focus{border-color:var(--orange)}
 
 <footer class="footer">Comunidade Ativa • Mapa dos Sertões</footer>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQCVixeQkymtR5fGABvJO-DHxDk2U36Cls3N79lF9EV5yigx4MmOtWmUkXws5yN44RhkcjqGj8gtesO/pub?gid=950681250&single=true&output=csv";
 
@@ -358,26 +359,81 @@ function render(){
   else if(bounds.length>1) map.fitBounds(bounds,{padding:[40,40],maxZoom:9});
 }
 
-function load(){
-  fetch(CSV_URL,{cache:'no-store'})
-    .then(r=>{if(!r.ok)throw new Error('CSV indisponível');return r.text()})
-    .then(t=>{
-      const parsed=parseCSV(t);
-      allRows=normalizeRows(parsed);
-      console.log('MAPA: linhas recebidas do Google Sheets:', parsed.length);
-      console.log('MAPA: registros válidos:', allRows.length, allRows);
-      setup();
-      render();
-      if(allRows.length===0){
-        document.getElementById('territoryList').innerHTML =
-          '<div class="empty">A planilha foi encontrada, mas nenhum registro com município e coordenadas válidas foi reconhecido.</div>';
-      }
-    })
-    .catch(err=>{
-      console.error(err);
-      document.getElementById('territoryList').innerHTML='<div class="empty">Não foi possível carregar a planilha agora.</div>';
+function handleGoogleSheetResponse(data){
+  try{
+    if(!data || !data.table){
+      throw new Error('Resposta do Google Sheets sem tabela.');
+    }
+
+    const cols = (data.table.cols || []).map((c,i) => c.label || ['municipio','lat','lng','acao','categoria','data','texto','foto','video'][i] || '');
+
+    const rows = (data.table.rows || []).map(r => {
+      const o = {};
+      cols.forEach((c,i) => {
+        const cell = r.c && r.c[i];
+        let value = '';
+
+        if(cell){
+          if(cell.f !== undefined && cell.f !== null && cell.f !== ''){
+            value = String(cell.f);
+          }else if(cell.v !== undefined && cell.v !== null){
+            value = String(cell.v);
+          }
+        }
+
+        o[normKey(c)] = value;
+      });
+      return o;
     });
+
+    // Remove linhas completamente vazias e normaliza coordenadas.
+    allRows = normalizeRows(rows);
+
+    // Ordenação alfabética das localidades.
+    allRows.sort((a,b)=>a.municipio.localeCompare(b.municipio,'pt-BR'));
+
+    console.log('MAPA: linhas recebidas:', rows.length);
+    console.log('MAPA: registros válidos:', allRows.length, allRows);
+
+    setup();
+    render();
+
+    if(allRows.length===0){
+      document.getElementById('territoryList').innerHTML =
+        '<div class="empty">A planilha respondeu, mas nenhum registro válido foi encontrado na aba MAPA.</div>';
+    }
+  }catch(err){
+    console.error('Erro Google Sheets:',err);
+    document.getElementById('territoryList').innerHTML =
+      '<div class="empty">Erro ao interpretar os dados da planilha.</div>';
+  }
 }
+
+function load(){
+  // IMPORTANTE: para o GViz usamos o ID real da planilha (/d/ID),
+  // e não o ID de publicação 2PACX... da URL "Publicar na Web".
+  // A aba MAPA tem gid=950681250.
+  const callback = 'handleGoogleSheetResponse';
+  const spreadsheetId = '1la-OC0AG_zyD5Hc2KYHaHcGXWXP30EnjeFq4csQ4bo';
+
+  const query = encodeURIComponent('select A,B,C,D,E,F,G,H,I');
+  const url =
+    'https://docs.google.com/spreadsheets/d/' + spreadsheetId + '/gviz/tq' +
+    '?gid=950681250' +
+    '&headers=1' +
+    '&tq=' + query +
+    '&tqx=responseHandler:' + callback;
+
+  const script = document.createElement('script');
+  script.src = url;
+  script.async = true;
+  script.onerror = () => {
+    document.getElementById('territoryList').innerHTML =
+      '<div class="empty">Não foi possível carregar os dados da aba MAPA. Confirme que a planilha está publicada na Web.</div>';
+  };
+  document.head.appendChild(script);
+}
+
 function setup(){
   const cats=[...new Set(allRows.map(r=>r.categoria).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
   const select=document.getElementById('category');
@@ -385,7 +441,12 @@ function setup(){
   document.getElementById('search').oninput=render;
   select.onchange=render;
 }
-load();
+if(typeof L === 'undefined'){
+  document.getElementById('territoryList').innerHTML =
+    '<div class="empty">A biblioteca do mapa não carregou. Atualize a página ou verifique a conexão.</div>';
+}else{
+  load();
+}
 </script>
 </body>
 </html>
