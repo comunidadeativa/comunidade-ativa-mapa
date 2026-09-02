@@ -376,13 +376,15 @@ function render(){
     const lng=first?.lng ?? t.lng;
 
     if(Number.isFinite(lat)&&Number.isFinite(lng)){
+      const marker=L.marker([lat,lng],{icon:markerIcon}).addTo(markerLayer);
       if(rows.length){
-        const marker=L.marker([lat,lng],{icon:markerIcon}).addTo(markerLayer);
         marker.bindPopup(rows.map(popupHtml).join('<hr>'));
-        markers.push(marker);
-        bounds.push([lat,lng]);
-        t.marker=marker;
+      }else{
+        marker.bindPopup('<div class="popup city-popup"><h3>'+escapeHtml(t.name)+'</h3><p>Ainda não há ação cadastrada neste município.</p></div>');
       }
+      markers.push(marker);
+      bounds.push([lat,lng]);
+      t.marker=marker;
     }
 
     const btn=document.createElement('button');
@@ -467,10 +469,28 @@ function loadCsv(){
 }
 
 // Atualiza os dados automaticamente enquanto a página estiver aberta.
+let refreshTimer=null;
+let refreshBusy=false;
+
+function refreshData(){
+  if(refreshBusy) return;
+  refreshBusy=true;
+  loadGviz()
+    .catch(err=>{
+      console.warn('GViz falhou na atualização:',err.message);
+      return loadCsv();
+    })
+    .catch(err=>console.warn('CSV falhou na atualização:',err.message))
+    .finally(()=>{ refreshBusy=false; });
+}
+
 function startAutoRefresh(){
-  setInterval(()=>{
-    loadGviz().catch(err=>console.warn('Atualização automática:',err.message));
-  },30000);
+  refreshData();
+  refreshTimer=setInterval(refreshData,15000);
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden) refreshData();
+  });
+  window.addEventListener('focus',refreshData);
 }
 
 function loadGviz(){
