@@ -279,8 +279,23 @@ function toNum(v){
 }
 function safeUrl(v){
   if(!v) return '';
-  if(/^https?:\/\//i.test(v)) return v;
-  return '';
+  const raw=String(v).trim();
+  if(!/^https?:\/\//i.test(raw)) return '';
+
+  // O Google Forms costuma salvar uploads como links do Drive
+  // (ex.: drive.google.com/open?id=ARQUIVO ou /file/d/ARQUIVO/view).
+  // Para imagens públicas do Drive, convertemos para uma URL de
+  // miniatura que pode ser exibida diretamente dentro do mapa.
+  try{
+    const u=new URL(raw);
+    if(/(^|\.)drive\.google\.com$/i.test(u.hostname)){
+      let id=u.searchParams.get('id')||'';
+      const m=u.pathname.match(/\/file\/d\/([^/]+)/i);
+      if(!id && m) id=m[1];
+      if(id) return 'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w1200';
+    }
+  }catch(e){}
+  return raw;
 }
 function escapeHtml(s){
   return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
