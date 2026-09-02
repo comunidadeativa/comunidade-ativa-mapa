@@ -187,8 +187,8 @@ function csvParse(text){
     if(c==='"' && quoted && n==='"'){cell+='"';i++;continue}
     if(c==='"'){quoted=!quoted;continue}
     if(c===',' && !quoted){row.push(cell);cell='';continue}
-    if((c==='\\n'||c==='\\r') && !quoted){
-      if(c==='\\r' && n==='\\n') i++;
+    if((c==='\n'||c==='\r') && !quoted){
+      if(c==='\r' && n==='\n') i++;
       row.push(cell);cell='';
       if(row.some(v=>v.trim()!=='')) rows.push(row);
       row=[];continue;
@@ -252,8 +252,8 @@ function parseDelimited(text, delimiter){
     if(c==='"' && quoted && n==='"'){cell+='"';i++;continue}
     if(c==='"'){quoted=!quoted;continue}
     if(c===delimiter && !quoted){row.push(cell);cell='';continue}
-    if((c==='\\n'||c==='\\r') && !quoted){
-      if(c==='\\r' && n==='\\n') i++;
+    if((c==='\n'||c==='\r') && !quoted){
+      if(c==='\r' && n==='\n') i++;
       row.push(cell);cell='';
       if(row.some(v=>v.trim()!=='')) rows.push(row);
       row=[];continue;
