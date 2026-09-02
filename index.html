@@ -469,7 +469,7 @@ function loadCsv(){
 // Atualiza os dados automaticamente enquanto a página estiver aberta.
 function startAutoRefresh(){
   setInterval(()=>{
-    loadCsv().catch(err=>console.warn('Atualização automática:',err.message));
+    loadGviz().catch(err=>console.warn('Atualização automática:',err.message));
   },30000);
 }
 
@@ -478,10 +478,12 @@ function loadGviz(){
     const callback='handleGoogleSheetResponse';
     const spreadsheetId='1la-OC0AG_zyD5Hc2KYHaHcGXWXP30EnjeFq4csQ4bo';
     const query=encodeURIComponent('select A,B,C,D,E,F,G,H,I');
-    const url='https://docs.google.com/spreadsheets/d/'+spreadsheetId+'/gviz/tq?gid=950681250&headers=1&tq='+query+'&tqx=responseHandler:'+callback;
+    // Usamos o GViz como fonte principal. Isso evita que o CSV publicado
+    // pelo Google entregue uma cópia antiga em cache.
+    const url='https://docs.google.com/spreadsheets/d/'+spreadsheetId+'/gviz/tq?gid=950681250&headers=1&tq='+query+'&tqx=responseHandler:'+callback+'&t='+Date.now();
     const script=document.createElement('script');
     let done=false;
-    const timer=setTimeout(()=>{if(!done){done=true;script.remove();reject(new Error('GViz timeout'));}},8000);
+    const timer=setTimeout(()=>{if(!done){done=true;script.remove();reject(new Error('GViz timeout'));}},10000);
     script.src=url;
     script.async=true;
     script.onload=()=>{if(!done){done=true;clearTimeout(timer);resolve();}};
@@ -492,11 +494,13 @@ function loadGviz(){
 
 function load(){
   document.getElementById('territoryList').innerHTML='<div class="empty">Carregando dados da planilha...</div>';
-  loadCsv().catch(err=>{
-    console.warn('CSV não carregou:',err);
-    return loadGviz();
+  // Primeiro tenta GViz, que consulta diretamente a planilha.
+  // O CSV fica apenas como plano B.
+  loadGviz().catch(err=>{
+    console.warn('GViz não carregou:',err);
+    return loadCsv();
   }).catch(err=>{
-    console.error('CSV e GViz falharam:',err);
+    console.error('GViz e CSV falharam:',err);
     showDataError('Não foi possível carregar a planilha. Verifique se a aba MAPA está publicada na Web.');
   });
 }
